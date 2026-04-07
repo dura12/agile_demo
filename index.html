@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Password Strength Demo</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 2rem;
+        max-width: 760px;
+        line-height: 1.5;
+      }
+      .card {
+        border: 1px solid #d9d9d9;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+      }
+      input {
+        width: 100%;
+        box-sizing: border-box;
+        font-size: 1rem;
+        padding: 0.6rem;
+      }
+      .result {
+        font-weight: 700;
+      }
+      .muted {
+        color: #555;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Password Strength Checker</h1>
+    <p class="muted">
+      This is our deployed homepage for the DevOps demo. Enter a password to see score and label.
+    </p>
+
+    <div class="card">
+      <label for="password">Password</label>
+      <input id="password" type="text" placeholder="Try: DevOps2026!demo" />
+      <p id="result" class="result">Score: 0 | Label: weak</p>
+      <p class="muted">
+        Rule: +2 per character (max 24), +15 if it has a digit, +15 if it has a symbol.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Pipeline summary</h2>
+      <ul>
+        <li>On push/PR to <code>main</code>, GitHub Actions runs tests.</li>
+        <li>After push, Vercel deploys this commit automatically.</li>
+      </ul>
+    </div>
+
+    <script>
+      function scorePassword(password) {
+        let score = Math.min(password.length * 2, 24);
+        if (/\d/.test(password)) score += 15;
+        if (/[^a-zA-Z0-9]/.test(password)) score += 15;
+        return score;
+      }
+
+      function strengthLabel(password) {
+        const score = scorePassword(password);
+        if (score < 25) return "weak";
+        if (score < 45) return "medium";
+        return "strong";
+      }
+
+      const passwordInput = document.getElementById("password");
+      const resultEl = document.getElementById("result");
+
+      passwordInput.addEventListener("input", () => {
+        const value = passwordInput.value || "";
+        resultEl.textContent = `Score: ${scorePassword(value)} | Label: ${strengthLabel(value)}`;
+      });
+    </script>
+  </body>
+</html>
