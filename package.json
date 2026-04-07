@@ -4,6 +4,6 @@
   "description": "Password strength demo for GitHub Actions CI",
   "type": "module",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test src/"
   }
 }
