@@ -23,11 +23,66 @@
         font-size: 1rem;
         padding: 0.6rem;
       }
+      .input-row {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+      }
+      .input-row input {
+        flex: 1;
+      }
+      button {
+        font-size: 0.95rem;
+        padding: 0.55rem 0.75rem;
+        border: 1px solid #c7c7c7;
+        border-radius: 6px;
+        background: #f7f7f7;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #efefef;
+      }
       .result {
         font-weight: 700;
       }
       .muted {
         color: #555;
+      }
+      .meter-wrap {
+        margin: 0.6rem 0;
+      }
+      .meter-track {
+        width: 100%;
+        height: 12px;
+        background: #ececec;
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .meter-fill {
+        height: 100%;
+        width: 0%;
+        background: #d9534f;
+        transition: width 140ms ease;
+      }
+      .checks {
+        list-style: none;
+        padding: 0;
+        margin: 0.75rem 0 0 0;
+      }
+      .checks li {
+        margin-bottom: 0.3rem;
+      }
+      .ok {
+        color: #167f39;
+      }
+      .bad {
+        color: #b53a3a;
+      }
+      .samples {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-top: 0.7rem;
       }
     </style>
   </head>
@@ -39,11 +94,29 @@
 
     <div class="card">
       <label for="password">Password</label>
-      <input id="password" type="text" placeholder="Try: DevOps2026!demo" />
+      <div class="input-row">
+        <input id="password" type="password" placeholder="Try: DevOps2026!demo" />
+        <button id="toggleBtn" type="button">Show</button>
+      </div>
       <p id="result" class="result">Score: 0 | Label: weak</p>
+      <div class="meter-wrap">
+        <div class="meter-track">
+          <div id="meterFill" class="meter-fill"></div>
+        </div>
+      </div>
       <p class="muted">
         Rule: +2 per character (max 24), +15 if it has a digit, +15 if it has a symbol.
       </p>
+      <ul class="checks">
+        <li id="checkLength" class="bad">x At least 8 characters</li>
+        <li id="checkDigit" class="bad">x Contains at least one digit</li>
+        <li id="checkSymbol" class="bad">x Contains at least one symbol</li>
+      </ul>
+      <div class="samples">
+        <button type="button" data-sample="abc">Try weak</button>
+        <button type="button" data-sample="hello1234">Try medium</button>
+        <button type="button" data-sample="DevOps2026!demo">Try strong</button>
+      </div>
     </div>
 
     <script>
@@ -63,11 +136,60 @@
 
       const passwordInput = document.getElementById("password");
       const resultEl = document.getElementById("result");
+      const meterFillEl = document.getElementById("meterFill");
+      const checkLengthEl = document.getElementById("checkLength");
+      const checkDigitEl = document.getElementById("checkDigit");
+      const checkSymbolEl = document.getElementById("checkSymbol");
+      const toggleBtn = document.getElementById("toggleBtn");
+      const sampleButtons = document.querySelectorAll("[data-sample]");
 
-      passwordInput.addEventListener("input", () => {
+      function setCheck(el, pass, okText, badText) {
+        el.className = pass ? "ok" : "bad";
+        el.textContent = pass ? `✓ ${okText}` : `x ${badText}`;
+      }
+
+      function meterColor(label) {
+        if (label === "strong") return "#28a745";
+        if (label === "medium") return "#f0ad4e";
+        return "#d9534f";
+      }
+
+      function render() {
         const value = passwordInput.value || "";
-        resultEl.textContent = `Score: ${scorePassword(value)} | Label: ${strengthLabel(value)}`;
+        const score = scorePassword(value);
+        const label = strengthLabel(value);
+        const meterPercent = Math.min(Math.round((score / 54) * 100), 100);
+
+        resultEl.textContent = `Score: ${score} | Label: ${label}`;
+        meterFillEl.style.width = `${meterPercent}%`;
+        meterFillEl.style.background = meterColor(label);
+
+        setCheck(checkLengthEl, value.length >= 8, "At least 8 characters", "At least 8 characters");
+        setCheck(checkDigitEl, /\d/.test(value), "Contains at least one digit", "Contains at least one digit");
+        setCheck(
+          checkSymbolEl,
+          /[^a-zA-Z0-9]/.test(value),
+          "Contains at least one symbol",
+          "Contains at least one symbol"
+        );
+      }
+
+      passwordInput.addEventListener("input", render);
+
+      toggleBtn.addEventListener("click", () => {
+        const show = passwordInput.type === "password";
+        passwordInput.type = show ? "text" : "password";
+        toggleBtn.textContent = show ? "Hide" : "Show";
       });
+
+      sampleButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          passwordInput.value = btn.getAttribute("data-sample");
+          render();
+        });
+      });
+
+      render();
     </script>
   </body>
 </html>
