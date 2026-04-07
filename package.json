@@ -1,0 +1,9 @@
+{
+  "name": "devops-demo-password-ci",
+  "version": "1.0.0",
+  "description": "Password strength demo for GitHub Actions CI",
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}
