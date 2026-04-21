@@ -10,12 +10,17 @@
         margin: 2rem;
         max-width: 760px;
         line-height: 1.5;
+        color: #202124;
+        background: #ffffff;
+        transition: background 140ms ease, color 140ms ease;
       }
       .card {
         border: 1px solid #d9d9d9;
         border-radius: 8px;
         padding: 1rem;
         margin-top: 1rem;
+        background: #ffffff;
+        box-shadow: 0 1px 8px rgba(0, 0, 0, 0.04);
       }
       input {
         width: 100%;
@@ -42,8 +47,41 @@
       button:hover {
         background: #efefef;
       }
+      .top-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+      }
       .result {
         font-weight: 700;
+      }
+      .result-line {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin-top: 0.6rem;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 0.15rem 0.55rem;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+      .chip.weak {
+        background: #fde8e8;
+        color: #9a1f1f;
+      }
+      .chip.medium {
+        background: #fff6dd;
+        color: #8a6200;
+      }
+      .chip.strong {
+        background: #e8f7e8;
+        color: #146b33;
       }
       .muted {
         color: #555;
@@ -84,10 +122,55 @@
         flex-wrap: wrap;
         margin-top: 0.7rem;
       }
+      .tip-box {
+        border-left: 4px solid #d9d9d9;
+        padding: 0.5rem 0.7rem;
+        background: #fbfbfb;
+        margin-top: 0.75rem;
+      }
+      .tip-title {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 0.2rem;
+      }
+      .tip-text {
+        margin: 0;
+        font-size: 0.95rem;
+      }
+      body.dark {
+        background: #0f172a;
+        color: #e8edf6;
+      }
+      body.dark .card {
+        background: #111827;
+        border-color: #2b3850;
+        box-shadow: none;
+      }
+      body.dark .muted {
+        color: #c3cde0;
+      }
+      body.dark button {
+        background: #1f2937;
+        border-color: #334155;
+        color: #e8edf6;
+      }
+      body.dark button:hover {
+        background: #273549;
+      }
+      body.dark .meter-track {
+        background: #273549;
+      }
+      body.dark .tip-box {
+        background: #111f34;
+        border-left-color: #3b82f6;
+      }
     </style>
   </head>
   <body>
-    <h1>Password Strength Checker</h1>
+    <div class="top-row">
+      <h1>Password Strength Checker</h1>
+      <button id="themeBtn" type="button">Dark mode</button>
+    </div>
     <p class="muted">
       This is our deployed homepage for the DevOps demo. Enter a password to see score and label.
     </p>
@@ -98,7 +181,10 @@
         <input id="password" type="password" placeholder="Try: DevOps2026!demo" />
         <button id="toggleBtn" type="button">Show</button>
       </div>
-      <p id="result" class="result">Score: 0 | Label: weak</p>
+      <div class="result-line">
+        <p id="result" class="result">Score: 0</p>
+        <span id="labelChip" class="chip weak">Weak</span>
+      </div>
       <div class="meter-wrap">
         <div class="meter-track">
           <div id="meterFill" class="meter-fill"></div>
@@ -116,6 +202,10 @@
         <button type="button" data-sample="abc">Try weak</button>
         <button type="button" data-sample="hello1234">Try medium</button>
         <button type="button" data-sample="DevOps2026!demo">Try strong</button>
+      </div>
+      <div class="tip-box">
+        <div class="tip-title">Live tip</div>
+        <p id="tipText" class="tip-text">Start typing to get suggestions.</p>
       </div>
     </div>
 
@@ -136,11 +226,14 @@
 
       const passwordInput = document.getElementById("password");
       const resultEl = document.getElementById("result");
+      const labelChipEl = document.getElementById("labelChip");
       const meterFillEl = document.getElementById("meterFill");
       const checkLengthEl = document.getElementById("checkLength");
       const checkDigitEl = document.getElementById("checkDigit");
       const checkSymbolEl = document.getElementById("checkSymbol");
       const toggleBtn = document.getElementById("toggleBtn");
+      const themeBtn = document.getElementById("themeBtn");
+      const tipTextEl = document.getElementById("tipText");
       const sampleButtons = document.querySelectorAll("[data-sample]");
 
       function setCheck(el, pass, okText, badText) {
@@ -154,15 +247,32 @@
         return "#d9534f";
       }
 
+      function labelClass(label) {
+        if (label === "strong") return "chip strong";
+        if (label === "medium") return "chip medium";
+        return "chip weak";
+      }
+
+      function tipForValue(value) {
+        if (!value) return "Start typing to get suggestions.";
+        if (value.length < 8) return "Tip: increase length to at least 8 characters.";
+        if (!/\d/.test(value)) return "Tip: add at least one digit.";
+        if (!/[^a-zA-Z0-9]/.test(value)) return "Tip: add at least one symbol.";
+        return "Great! This password satisfies all demo checks.";
+      }
+
       function render() {
         const value = passwordInput.value || "";
         const score = scorePassword(value);
         const label = strengthLabel(value);
         const meterPercent = Math.min(Math.round((score / 54) * 100), 100);
 
-        resultEl.textContent = `Score: ${score} | Label: ${label}`;
+        resultEl.textContent = `Score: ${score}`;
+        labelChipEl.className = labelClass(label);
+        labelChipEl.textContent = label;
         meterFillEl.style.width = `${meterPercent}%`;
         meterFillEl.style.background = meterColor(label);
+        tipTextEl.textContent = tipForValue(value);
 
         setCheck(checkLengthEl, value.length >= 8, "At least 8 characters", "At least 8 characters");
         setCheck(checkDigitEl, /\d/.test(value), "Contains at least one digit", "Contains at least one digit");
@@ -180,6 +290,11 @@
         const show = passwordInput.type === "password";
         passwordInput.type = show ? "text" : "password";
         toggleBtn.textContent = show ? "Hide" : "Show";
+      });
+
+      themeBtn.addEventListener("click", () => {
+        const isDark = document.body.classList.toggle("dark");
+        themeBtn.textContent = isDark ? "Light mode" : "Dark mode";
       });
 
       sampleButtons.forEach((btn) => {
